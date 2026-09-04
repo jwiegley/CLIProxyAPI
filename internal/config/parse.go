@@ -94,6 +94,10 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	}
 
 	// Apply the same sanitization pipeline.
+	cfg.SanitizeFactory()
+	if errValidate := cfg.ValidateFactory(); errValidate != nil {
+		return nil, errValidate
+	}
 	cfg.SanitizeGeminiKeys()
 	cfg.SanitizeInteractionsKeys()
 	cfg.SanitizeVertexCompatKeys()

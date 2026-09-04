@@ -137,6 +137,19 @@ type XAIConfig struct {
 	InjectXSearch bool `yaml:"inject-x-search" json:"inject-x-search"`
 }
 
+// FactoryConfig configures the local Factory Droid SDK backend.
+type FactoryConfig struct {
+	Enabled             bool     `yaml:"enabled" json:"enabled"`
+	PythonCommand       string   `yaml:"python-command,omitempty" json:"python-command,omitempty"`
+	DroidCommand        string   `yaml:"droid-command,omitempty" json:"droid-command,omitempty"`
+	CWD                 string   `yaml:"cwd,omitempty" json:"cwd,omitempty"`
+	Prefix              string   `yaml:"prefix,omitempty" json:"prefix,omitempty"`
+	ExcludedModels      []string `yaml:"excluded-models,omitempty" json:"excluded-models,omitempty"`
+	Autonomy            string   `yaml:"autonomy,omitempty" json:"autonomy,omitempty"`
+	Tools               []string `yaml:"tools,omitempty" json:"tools,omitempty"`
+	EnableBuiltinSkills bool     `yaml:"enable-builtin-skills,omitempty" json:"enable-builtin-skills,omitempty"`
+}
+
 // AntigravityConfig configures provider-wide Antigravity request behavior.
 type AntigravityConfig struct {
 	// SensitiveWords is a list of words to obfuscate with zero-width characters in system instructions.

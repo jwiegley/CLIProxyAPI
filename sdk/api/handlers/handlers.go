@@ -217,6 +217,9 @@ func requestExecutionMetadata(ctx context.Context) map[string]any {
 	if requestPath != "" {
 		meta[coreexecutor.RequestPathMetadataKey] = requestPath
 	}
+	if originalRequest := originalEndpointRequestFromContext(ctx); len(originalRequest) > 0 {
+		meta[coreexecutor.OriginalEndpointRequestMetadataKey] = originalRequest
+	}
 	if pinnedAuthID := pinnedAuthIDFromContext(ctx); pinnedAuthID != "" {
 		meta[coreexecutor.PinnedAuthMetadataKey] = pinnedAuthID
 	}

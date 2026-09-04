@@ -123,6 +123,9 @@ type Config struct {
 	// XAI configures provider-wide xAI request behavior.
 	XAI XAIConfig `yaml:"xai" json:"xai"`
 
+	// Factory configures the local Factory Droid SDK backend.
+	Factory FactoryConfig `yaml:"factory" json:"factory"`
+
 	// Codex configures provider-wide Codex request behavior.
 	Codex CodexConfig `yaml:"codex" json:"codex"`
 

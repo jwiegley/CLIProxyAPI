@@ -11,7 +11,12 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v7/internal/registry"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v7/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v7/sdk/config"
+	log "github.com/sirupsen/logrus"
 )
+
+type factoryModelLister interface {
+	ListModels(context.Context) ([]*registry.ModelInfo, error)
+}
 
 // registerModelsForAuth (re)binds provider models in the global registry using the core auth ID as client identifier.
 func (s *Service) registerModelsForAuth(ctx context.Context, a *coreauth.Auth) {
@@ -143,6 +148,26 @@ func (s *Service) registerModelsForAuthWithCache(ctx context.Context, a *coreaut
 	case "kimi":
 		models = registry.GetKimiModels()
 		models = applyExcludedModels(models, excluded)
+	case "factory":
+		executor, ok := s.coreManager.Executor("factory")
+		lister, canList := executor.(factoryModelLister)
+		if !ok || !canList {
+			GlobalModelRegistry().UnregisterClient(a.ID)
+			log.Error("Factory SDK executor is unavailable for model discovery")
+			return
+		}
+		var err error
+		models, err = lister.ListModels(ctx)
+		if err != nil {
+			GlobalModelRegistry().UnregisterClient(a.ID)
+			if ctx.Err() == nil {
+				log.WithError(err).Error("Factory SDK model discovery failed")
+			}
+			return
+		}
+		models = applyExcludedModels(models, excluded)
+		s.registerResolvedModelsForAuth(a, provider, applyModelPrefixes(models, a.Prefix, true))
+		return
 	case "xai":
 		models = registry.GetXAIModels()
 		if entry := s.resolveConfigXAIKey(a); entry != nil {

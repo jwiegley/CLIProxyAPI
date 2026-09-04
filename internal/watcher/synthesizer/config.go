@@ -13,7 +13,7 @@ import (
 )
 
 // ConfigSynthesizer generates Auth entries from configuration API keys.
-// It handles Gemini, Interactions, Claude, Codex, xAI, OpenAI-compat, and Vertex-compat providers.
+// It handles Factory, Gemini, Interactions, Claude, Codex, xAI, OpenAI-compat, and Vertex-compat providers.
 type ConfigSynthesizer struct{}
 
 // NewConfigSynthesizer creates a new ConfigSynthesizer instance.
@@ -42,6 +42,9 @@ func (s *ConfigSynthesizer) Synthesize(ctx *SynthesisContext) ([]*coreauth.Auth,
 		return nil, fmt.Errorf("synthesize config API key auths: %w", errValidate)
 	}
 
+	// Factory Droid SDK
+	out = append(out, s.synthesizeFactory(ctx)...)
+
 	// Gemini API Keys
 	out = append(out, s.synthesizeGeminiKeys(ctx)...)
 	// Native Interactions API Keys
@@ -58,6 +61,43 @@ func (s *ConfigSynthesizer) Synthesize(ctx *SynthesisContext) ([]*coreauth.Auth,
 	out = append(out, s.synthesizeVertexCompat(ctx)...)
 
 	return out, nil
+}
+
+func (s *ConfigSynthesizer) synthesizeFactory(ctx *SynthesisContext) []*coreauth.Auth {
+	normalized := &config.Config{Factory: ctx.Config.Factory}
+	normalized.SanitizeFactory()
+	factory := normalized.Factory
+	if !factory.Enabled {
+		return nil
+	}
+	id, token := ctx.IDGenerator.Next(
+		"factory:apikey",
+		factory.PythonCommand,
+		factory.DroidCommand,
+		factory.CWD,
+		factory.Prefix,
+	)
+	attrs := map[string]string{
+		"source":         fmt.Sprintf("config:factory[%s]", token),
+		"config_index":   "0",
+		"python_command": factory.PythonCommand,
+		"droid_command":  factory.DroidCommand,
+	}
+	if factory.CWD != "" {
+		attrs["cwd"] = factory.CWD
+	}
+	auth := &coreauth.Auth{
+		ID:         id,
+		Provider:   "factory",
+		Label:      "factory-sdk",
+		Prefix:     factory.Prefix,
+		Status:     coreauth.StatusActive,
+		Attributes: attrs,
+		CreatedAt:  ctx.Now,
+		UpdatedAt:  ctx.Now,
+	}
+	ApplyAuthExcludedModelsMeta(auth, ctx.Config, factory.ExcludedModels, "apikey")
+	return []*coreauth.Auth{auth}
 }
 
 // synthesizeGeminiKeys creates Auth entries for Gemini API keys.

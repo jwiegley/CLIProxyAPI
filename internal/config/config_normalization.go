@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -30,6 +31,62 @@ func (cfg *Config) NormalizePluginsConfig() {
 	cfg.Plugins.StoreAuth = sdkpluginstore.NormalizeAuthConfigs(cfg.Plugins.StoreAuth)
 	if cfg.Plugins.Configs == nil {
 		cfg.Plugins.Configs = map[string]PluginInstanceConfig{}
+	}
+}
+
+// SanitizeFactory normalizes the local Droid SDK runtime configuration.
+func (cfg *Config) SanitizeFactory() {
+	if cfg == nil {
+		return
+	}
+	factory := &cfg.Factory
+	factory.PythonCommand = strings.TrimSpace(factory.PythonCommand)
+	factory.DroidCommand = strings.TrimSpace(factory.DroidCommand)
+	factory.CWD = strings.TrimSpace(factory.CWD)
+	factory.Prefix = normalizeModelPrefix(factory.Prefix)
+	factory.ExcludedModels = NormalizeExcludedModels(factory.ExcludedModels)
+	factory.Autonomy = strings.ToLower(strings.TrimSpace(factory.Autonomy))
+	seenTools := make(map[string]struct{}, len(factory.Tools))
+	tools := make([]string, 0, len(factory.Tools))
+	for _, tool := range factory.Tools {
+		tool = strings.TrimSpace(tool)
+		if tool == "" {
+			continue
+		}
+		if _, exists := seenTools[tool]; exists {
+			continue
+		}
+		seenTools[tool] = struct{}{}
+		tools = append(tools, tool)
+	}
+	factory.Tools = tools
+	if !factory.Enabled {
+		return
+	}
+	if factory.PythonCommand == "" {
+		factory.PythonCommand = "python3"
+	}
+	if factory.DroidCommand == "" {
+		factory.DroidCommand = "droid"
+	}
+	if factory.Prefix == "" {
+		factory.Prefix = "factory"
+	}
+	if factory.Autonomy == "" {
+		factory.Autonomy = "off"
+	}
+}
+
+// ValidateFactory checks values that the Droid SDK exposes as closed enums.
+func (cfg *Config) ValidateFactory() error {
+	if cfg == nil || !cfg.Factory.Enabled {
+		return nil
+	}
+	switch cfg.Factory.Autonomy {
+	case "off", "low", "medium", "high":
+		return nil
+	default:
+		return fmt.Errorf("factory.autonomy must be one of off, low, medium, or high")
 	}
 }
 

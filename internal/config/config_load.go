@@ -147,6 +147,12 @@ func LoadConfigOptional(configFile string, optional bool) (*Config, error) {
 		return nil, errResolvePluginsDir
 	}
 
+	// Normalize Factory Droid SDK runtime configuration.
+	cfg.SanitizeFactory()
+	if errValidate := cfg.ValidateFactory(); errValidate != nil {
+		return nil, errValidate
+	}
+
 	// Sanitize Gemini API key configuration and migrate legacy entries.
 	cfg.SanitizeGeminiKeys()
 

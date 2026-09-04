@@ -124,11 +124,14 @@ PackyCode provides special discounts for our software users: register using <a h
 - OpenAI Codex multi-account load balancing
 - Grok Build multi-account load balancing
 - OpenAI-compatible upstream providers via config (e.g., OpenRouter)
+- Factory Droid SDK backend with dynamic model discovery and HTTP streaming
 - Reusable Go SDK for embedding the proxy (see `docs/sdk-usage.md`)
 
 ## Getting Started
 
 CLIProxyAPI Guides: [https://help.router-for.me/](https://help.router-for.me/)
+
+Factory Droid SDK backend: [docs/factory-droid.md](docs/factory-droid.md)
 
 ## Management API
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,6 +22,7 @@ type executionSessionContextKey struct{}
 type disallowFreeAuthContextKey struct{}
 
 type nestedExecutionTrackerKey struct{}
+type originalEndpointRequestContextKey struct{}
 
 type nestedExecutionTracker struct {
 	mu     sync.Mutex
@@ -63,6 +65,25 @@ func markNestedExecution(ctx context.Context) {
 	if tracker, ok := ctx.Value(nestedExecutionTrackerKey{}).(*nestedExecutionTracker); ok && tracker != nil {
 		tracker.mark()
 	}
+}
+
+// WithOriginalEndpointRequest preserves a route body before compatibility conversion.
+func WithOriginalEndpointRequest(ctx context.Context, body []byte) context.Context {
+	if len(body) == 0 {
+		return ctx
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return context.WithValue(ctx, originalEndpointRequestContextKey{}, bytes.Clone(body))
+}
+
+func originalEndpointRequestFromContext(ctx context.Context) []byte {
+	if ctx == nil {
+		return nil
+	}
+	body, _ := ctx.Value(originalEndpointRequestContextKey{}).([]byte)
+	return bytes.Clone(body)
 }
 
 // WithPinnedAuthID returns a child context that requests execution on a specific auth ID.

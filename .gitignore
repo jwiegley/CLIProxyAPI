@@ -30,6 +30,8 @@ auths/*
 
 # Documentation
 docs/*
+!docs/factory-droid.md
+!docs/factory-droid-verification.md
 AGENTS.md
 CLAUDE.md
 GEMINI.md

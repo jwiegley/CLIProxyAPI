@@ -41,6 +41,22 @@ api-keys:
   - "your-api-key-2"
   - "your-api-key-3"
 
+# Factory Droid SDK backend. The Python interpreter must have droid-sdk installed.
+# Authentication comes from that service user's local Droid session or FACTORY_API_KEY environment.
+# The default factory prefix makes models available as factory/auto and factory/<model-id>.
+factory:
+  enabled: false
+  python-command: "python3"
+  droid-command: "droid"
+  cwd: ""
+  prefix: "factory"
+  excluded-models: []
+  # Native Droid tools are server-side capabilities, not OpenAI client function tools.
+  # Keep these safe defaults unless remote prompts should act with the daemon user's permissions.
+  autonomy: "off" # off, low, medium, high
+  tools: [] # restrictive Droid tool ID allowlist
+  enable-builtin-skills: false
+
 # Enable debug logging
 debug: false
 
