@@ -27,7 +27,7 @@ func ShouldNormalizeOpenAIToolResultsForModel(compat *config.OpenAICompatibility
 }
 
 // NormalizeOpenAIToolResultsTextOnly converts tool message content to strings.
-// Text parts are preserved and image parts are replaced with a short marker.
+// Image parts, including those relayed in user messages, become omission markers.
 func NormalizeOpenAIToolResultsTextOnly(payload []byte) []byte {
 	messages := gjson.GetBytes(payload, "messages")
 	if !messages.Exists() || !messages.IsArray() {
@@ -43,6 +43,17 @@ func NormalizeOpenAIToolResultsTextOnly(payload []byte) []byte {
 				path := fmt.Sprintf("messages.%d.content", messageIndex)
 				if updated, errSet := sjson.SetBytes(out, path, flattenOpenAIToolResultContent(content)); errSet == nil {
 					out = updated
+				}
+			}
+		} else if message.Get("role").String() == "user" {
+			// Translators relay tool-result images as user content for OpenAI.
+			for partIndex, part := range message.Get("content").Array() {
+				if isOpenAIImageToolResultPart(part) {
+					path := fmt.Sprintf("messages.%d.content.%d", messageIndex, partIndex)
+					marker := map[string]string{"type": "text", "text": openAIToolResultImageOmittedText}
+					if updated, errSet := sjson.SetBytes(out, path, marker); errSet == nil {
+						out = updated
+					}
 				}
 			}
 		}
